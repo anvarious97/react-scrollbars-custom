@@ -1,7 +1,7 @@
 import { cnb } from 'cnbuilder';
 import * as React from 'react';
 import { AXIS_DIRECTION, ElementPropsWithElementRefAndRenderer } from './types';
-import { isFun, isUndef, renderDivWithRenderer } from './util';
+import { isFun, isUndef, mergeRefs, renderDivWithRenderer } from './util';
 
 export interface ScrollbarTrackClickParameters {
   axis: AXIS_DIRECTION;
@@ -17,10 +17,10 @@ export type ScrollbarTrackProps = ElementPropsWithElementRefAndRenderer & {
 };
 
 export default class ScrollbarTrack extends React.Component<ScrollbarTrackProps, unknown> {
-  public element: HTMLDivElement | null = null;
+  public elementRef = React.createRef<HTMLDivElement>();
 
   public componentDidMount(): void {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       this.setState(() => {
         throw new Error(
           "Element was not created. Possibly you haven't provided HTMLDivElement to renderer's `elementRef` function."
@@ -28,30 +28,19 @@ export default class ScrollbarTrack extends React.Component<ScrollbarTrackProps,
       });
       return;
     }
-
-    this.element.addEventListener('click', this.handleClick);
+    this.elementRef.current.addEventListener('click', this.handleClick);
   }
 
   public componentWillUnmount(): void {
-    if (this.element) {
-      this.element.removeEventListener('click', this.handleClick);
-      this.element = null;
-
-      this.elementRef(null);
-    }
+    this.elementRef.current?.removeEventListener('click', this.handleClick);
   }
 
-  private elementRef = (ref: HTMLDivElement | null): void => {
-    if (isFun(this.props.elementRef)) this.props.elementRef(ref);
-    this.element = ref;
-  };
-
   private handleClick = (ev: MouseEvent) => {
-    if (!ev || !this.element || ev.button !== 0) {
+    if (!ev || !this.elementRef.current || ev.button !== 0) {
       return;
     }
 
-    if (isFun(this.props.onClick) && ev.target === this.element) {
+    if (isFun(this.props.onClick) && ev.target === this.elementRef.current) {
       if (!isUndef(ev.offsetX)) {
         this.props.onClick(ev, {
           axis: this.props.axis,
@@ -60,7 +49,7 @@ export default class ScrollbarTrack extends React.Component<ScrollbarTrackProps,
       } else {
         // support for old browsers
         /* istanbul ignore next */
-        const rect: ClientRect = this.element.getBoundingClientRect();
+        const rect = this.elementRef.current.getBoundingClientRect();
         /* istanbul ignore next */
         this.props.onClick(ev, {
           axis: this.props.axis,
@@ -97,6 +86,6 @@ export default class ScrollbarTrack extends React.Component<ScrollbarTrackProps,
       (props as ScrollbarTrackProps).axis = axis;
     }
 
-    return renderDivWithRenderer(props, this.elementRef);
+    return renderDivWithRenderer(props, mergeRefs([this.elementRef, elementRef]));
   }
 }

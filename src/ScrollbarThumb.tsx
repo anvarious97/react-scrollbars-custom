@@ -2,7 +2,7 @@ import { cnb } from 'cnbuilder';
 import * as React from 'react';
 import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable';
 import { AXIS_DIRECTION, ElementPropsWithElementRefAndRenderer } from './types';
-import { isBrowser, isFun, isUndef, renderDivWithRenderer } from './util';
+import { isBrowser, isUndef, mergeRefs, renderDivWithRenderer } from './util';
 
 export type DragCallbackData = Pick<DraggableData, Exclude<keyof DraggableData, 'node'>>;
 
@@ -19,8 +19,6 @@ export type ScrollbarThumbProps = ElementPropsWithElementRefAndRenderer & {
 export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps, unknown> {
   private static selectStartReplacer = () => false;
 
-  public element: HTMLDivElement | null = null;
-
   public initialOffsetX = 0;
 
   public initialOffsetY = 0;
@@ -29,7 +27,7 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
 
   private prevOnSelectStart: ((ev: Event) => boolean) | null;
 
-  private elementRefHack = React.createRef<HTMLElement>();
+  private elementRef = React.createRef<HTMLElement>();
 
   public lastDragData: DragCallbackData = {
     x: 0,
@@ -41,7 +39,7 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
   };
 
   public componentDidMount(): void {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       this.setState(() => {
         throw new Error(
           "<ScrollbarThumb> Element was not created. Possibly you haven't provided HTMLDivElement to renderer's `elementRef` function."
@@ -52,12 +50,10 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
 
   public componentWillUnmount(): void {
     this.handleOnDragStop();
-
-    this.elementRef(null);
   }
 
   public handleOnDragStart = (ev: DraggableEvent, data: DraggableData) => {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       this.handleOnDragStop(ev, data);
       return;
     }
@@ -83,11 +79,11 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
       );
     }
 
-    this.element.classList.add('dragging');
+    this.elementRef.current.classList.add('dragging');
   };
 
   public handleOnDrag = (ev: DraggableEvent, data: DraggableData) => {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       this.handleOnDragStop(ev, data);
       return;
     }
@@ -120,7 +116,7 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
 
     if (this.props.onDragEnd) this.props.onDragEnd(resultData);
 
-    if (this.element) this.element.classList.remove('dragging');
+    if (this.elementRef.current) this.elementRef.current.classList.remove('dragging');
 
     if (isBrowser) {
       document.body.style.userSelect = this.prevUserSelect;
@@ -145,7 +141,7 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
   };
 
   public handleOnMouseDown = (ev: MouseEvent) => {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       return;
     }
 
@@ -158,21 +154,12 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
       /* istanbul ignore next */
       this.initialOffsetY = ev.offsetY;
     } else {
-      const rect: ClientRect = this.element.getBoundingClientRect();
+      const rect = this.elementRef.current.getBoundingClientRect();
       this.initialOffsetX =
         (ev.clientX || (ev as unknown as TouchEvent).touches[0].clientX) - rect.left;
       this.initialOffsetY =
         (ev.clientY || (ev as unknown as TouchEvent).touches[0].clientY) - rect.top;
     }
-  };
-
-  private elementRef = (ref: HTMLDivElement | null): void => {
-    if (isFun(this.props.elementRef)) this.props.elementRef(ref);
-    this.element = ref;
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    this.elementRefHack.current = ref;
   };
 
   public render(): React.ReactElement<any> | null {
@@ -210,8 +197,8 @@ export default class ScrollbarThumb extends React.Component<ScrollbarThumbProps,
         onDrag={this.handleOnDrag}
         onStart={this.handleOnDragStart}
         onStop={this.handleOnDragStop}
-        nodeRef={this.elementRefHack}>
-        {renderDivWithRenderer(props, this.elementRef)}
+        nodeRef={this.elementRef}>
+        {renderDivWithRenderer(props, mergeRefs([this.elementRef, elementRef]))}
       </DraggableCore>
     );
   }

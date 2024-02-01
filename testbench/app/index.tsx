@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDom from 'react-dom';
+import * as ReactDom from 'react-dom/client';
 import { Scrollbar } from '../../src';
 
 export const PARAGRAPHS_TEXT = [
@@ -23,7 +23,7 @@ export function getRandomParagraphText() {
 
 export function renderAmountOfParagraphs(
   amount = 5,
-  paragraphsProps: React.HTMLProps<HTMLParagraphElement> = {}
+  paragraphsProps: React.ComponentProps<'p'> = {}
 ) {
   const result: Array<JSX.Element> = [];
 
@@ -38,11 +38,10 @@ export function renderAmountOfParagraphs(
   return result;
 }
 
-ReactDom.render(
+ReactDom.createRoot(document.querySelector('#AppRoot')!).render(
   <React.StrictMode>
     <Scrollbar style={{ width: 528, height: 200 }}>
       {renderAmountOfParagraphs(10, { style: { width: '150%' } })}
     </Scrollbar>
-  </React.StrictMode>,
-  document.querySelector('#AppRoot')
+  </React.StrictMode>
 );

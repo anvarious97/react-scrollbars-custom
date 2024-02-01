@@ -21,7 +21,7 @@ describe('ScrollbarThumb', () => {
 
   it('should render a div by default', (done) => {
     ReactDOM.render(<ScrollbarThumb axis={AXIS_DIRECTION.X} />, getNode(), function () {
-      expect(this.element instanceof HTMLDivElement).toBeTruthy();
+      expect(this.elementRef.current instanceof HTMLDivElement).toBeTruthy();
       done();
     });
   });
@@ -46,7 +46,7 @@ describe('ScrollbarThumb', () => {
   it('should render proper track with direction X axis', (done) => {
     ReactDOM.render(<ScrollbarThumb axis={AXIS_DIRECTION.X} />, getNode(), function () {
       expect(this.props.axis).toBe(AXIS_DIRECTION.X);
-      expect(this.element.classList.contains('ScrollbarsCustom-ThumbX')).toBeTruthy();
+      expect(this.elementRef.current.classList.contains('ScrollbarsCustom-ThumbX')).toBeTruthy();
       done();
     });
   });
@@ -54,7 +54,7 @@ describe('ScrollbarThumb', () => {
   it('should render proper track with direction Y axis', (done) => {
     ReactDOM.render(<ScrollbarThumb axis={AXIS_DIRECTION.Y} />, getNode(), function () {
       expect(this.props.axis).toBe(AXIS_DIRECTION.Y);
-      expect(this.element.classList.contains('ScrollbarsCustom-ThumbY')).toBeTruthy();
+      expect(this.elementRef.current.classList.contains('ScrollbarsCustom-ThumbY')).toBeTruthy();
       done();
     });
   });
@@ -64,7 +64,7 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} className="MyAwesomeClassName" />,
       getNode(),
       function () {
-        expect(this.element.classList.contains('MyAwesomeClassName')).toBeTruthy();
+        expect(this.elementRef.current.classList.contains('MyAwesomeClassName')).toBeTruthy();
         done();
       }
     );
@@ -75,8 +75,8 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} style={{ width: 100, height: 200 }} />,
       getNode(),
       function () {
-        expect(this.element.style.width).toBe('100px');
-        expect(this.element.style.height).toBe('200px');
+        expect(this.elementRef.current.style.width).toBe('100px');
+        expect(this.elementRef.current.style.height).toBe('200px');
         done();
       }
     );
@@ -95,7 +95,9 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} renderer={renderer} />,
       getNode(),
       function () {
-        expect(this.element.parentElement.classList.contains('customTrack')).toBeTruthy();
+        expect(
+          this.elementRef.current.parentElement.classList.contains('customTrack')
+        ).toBeTruthy();
 
         done();
       }
@@ -111,7 +113,10 @@ describe('ScrollbarThumb', () => {
       );
     };
 
-    class ErrorBoundary extends React.Component<Record<string, unknown>, { [key: string]: any }> {
+    class ErrorBoundary extends React.Component<
+      React.PropsWithChildren<unknown>,
+      { error: unknown; errorInfo: unknown }
+    > {
       constructor(props) {
         super(props);
         this.state = { error: null, errorInfo: null };
@@ -162,9 +167,9 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
@@ -190,9 +195,9 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 1,
           clientY: top + height / 2,
           clientX: left + width / 2,
@@ -219,9 +224,9 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
@@ -262,9 +267,9 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
@@ -313,15 +318,15 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
         });
 
-        this.element = null;
+        this.elementRef.current = null;
         simulant.fire(document, 'mousemove', {
           button: 0,
           clientY: top + height / 2,
@@ -355,10 +360,10 @@ describe('ScrollbarThumb', () => {
       />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        const elt = this.element;
-        this.element = null;
+        const elt = this.elementRef.current;
+        this.elementRef.current = null;
         simulant.fire(elt, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
@@ -380,16 +385,16 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} style={{ width: 80, height: 100 }} />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
         });
 
         setTimeout(() => {
-          expect(this.element.classList.contains('dragging')).toBeTruthy();
+          expect(this.elementRef.current.classList.contains('dragging')).toBeTruthy();
           done();
         }, 5);
       }
@@ -404,9 +409,9 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} style={{ width: 80, height: 100 }} onDragEnd={end} />,
       node,
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,
@@ -434,9 +439,9 @@ describe('ScrollbarThumb', () => {
       <ScrollbarThumb axis={AXIS_DIRECTION.Y} style={{ width: 80, height: 100 }} />,
       getNode(),
       function () {
-        const { top, height, left, width } = this.element.getBoundingClientRect();
+        const { top, height, left, width } = this.elementRef.current.getBoundingClientRect();
 
-        simulant.fire(this.element, 'mousedown', {
+        simulant.fire(this.elementRef.current, 'mousedown', {
           button: 0,
           clientY: top + height / 2,
           clientX: left + width / 2,

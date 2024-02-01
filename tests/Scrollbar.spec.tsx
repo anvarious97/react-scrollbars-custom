@@ -9,7 +9,7 @@ import { ScrollState, TRACK_CLICK_BEHAVIOR } from '../src/types';
 import { getScrollbarWidth, shouldReverseRtlScroll } from '../src/util';
 
 class ScrollbarPropsUpdater extends React.Component<
-  { scrollbarProps: ScrollbarProps },
+  React.PropsWithChildren<{ scrollbarProps: ScrollbarProps }>,
   { scrollbarProps: ScrollbarProps }
 > {
   scrollbar: Scrollbar;
@@ -338,7 +338,10 @@ describe('Scrollbar', () => {
         );
       };
 
-      class ErrorBoundary extends React.Component<unknown, { [key: string]: any }> {
+      class ErrorBoundary extends React.Component<
+        React.PropsWithChildren<unknown>,
+        { error: unknown; errorInfo: unknown }
+      > {
         constructor(props) {
           super(props);
           this.state = { error: null, errorInfo: null };
@@ -1134,7 +1137,7 @@ describe('Scrollbar', () => {
         static contextType = ScrollbarContext;
 
         public componentDidMount(): void {
-          consumedContext = this.context;
+          consumedContext = this.context as ScrollbarContextValue;
         }
 
         render() {
